@@ -1,12 +1,9 @@
-# Kotlin Multiplatform Desktop App
+# Image Metadata Editor using KMP
 
-This is a template to start working with Kotlin Multiplatform for Desktop Application Development.
-It is based on the official kotlin multiplatform wizard with some tweaks, for example using material 3 and a default dark mode setup.
+This application is a tool to edit metadata of images, such as EXIF, IPTC, and XMP.
+It is built using Kotlin Multiplatform (KMP) and Compose Multiplatform for desktop.
 
-![kmp_desktop](https://github.com/trflorian/kmpDesktopAppTemplate/assets/27728267/28a58ad6-dcee-4511-9806-528fe724837a)
-
-## Resources
-
-- [Official KMP Docs](https://www.jetbrains.com/help/kotlin-multiplatform-dev/get-started.html)
-- [KMP Project Wizard](https://kmp.jetbrains.com/)
-- [How to setup your development environment for KMP](https://www.jetbrains.com/help/kotlin-multiplatform-dev/multiplatform-setup.html#check-your-environment)
+## Features
+- Load image metadata
+- Edit metadata
+- Save metadata
