@@ -1,4 +1,4 @@
-rootProject.name = "kmpDesktopApp"
+rootProject.name = "kmpImageMetaEditor"
 enableFeaturePreview("TYPESAFE_PROJECT_ACCESSORS")
 
 pluginManagement {
