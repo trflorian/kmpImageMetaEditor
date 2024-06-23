@@ -24,6 +24,8 @@ kotlin {
             implementation(compose.components.resources)
             implementation(compose.components.uiToolingPreview)
             implementation(compose.desktop.currentOs)
+
+            implementation("com.ashampoo:kim:0.18.4")
         }
     }
 }
