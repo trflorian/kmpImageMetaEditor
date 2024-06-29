@@ -6,9 +6,12 @@ import com.ashampoo.kim.input.JvmInputStreamByteReader
 import com.ashampoo.kim.input.use
 import com.ashampoo.kim.jvm.readMetadata
 import com.ashampoo.kim.output.OutputStreamByteWriter
+import com.github.panpf.sketch.PlatformContext
+import com.github.panpf.sketch.request.ImageRequest
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
 import java.io.File
 
@@ -21,6 +24,17 @@ class MainViewModel(
     private val _fileList = MutableStateFlow(emptyList<File>())
     val fileList = _fileList.asStateFlow()
 
+    val imageRequests = fileList.map {
+        it.map { file ->
+            ImageRequest(
+                context = PlatformContext.INSTANCE,
+                uri = file.absolutePath,
+            ) {
+                size(256, 256)
+            }
+        }
+    }
+
     init {
         if (initialFolder != null) {
             loadFiles(initialFolder)
@@ -29,7 +43,18 @@ class MainViewModel(
 
     fun loadFiles(folder: File) {
         println("Loading files in folder: $folder")
-        _fileList.value = folder.listFiles()?.toList()?.sorted() ?: emptyList()
+        val allFilesInFolder = folder.listFiles()?.toList() ?: emptyList()
+        val imagesInFolder = allFilesInFolder.filter {
+            it.extension.lowercase() in listOf(
+                "jpg",
+                "jpeg",
+                "png",
+                "gif",
+                "bmp",
+                "webp"
+            )
+        }
+        _fileList.value = imagesInFolder.sortedBy { it.name }
         println("Loaded ${fileList.value.size} files")
     }
 

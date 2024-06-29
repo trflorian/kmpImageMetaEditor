@@ -34,6 +34,9 @@ kotlin {
             implementation(libs.navigation.compose)
 
             implementation(libs.kim)
+
+            implementation("io.github.panpf.sketch4:sketch-compose:4.0.0-alpha03")
+
         }
     }
 }

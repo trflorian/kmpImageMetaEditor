@@ -8,6 +8,7 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
@@ -35,9 +36,11 @@ import androidx.compose.ui.input.key.onKeyEvent
 import androidx.compose.ui.input.key.type
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
+import com.github.panpf.sketch.AsyncImage
 import org.jetbrains.compose.ui.tooling.preview.Preview
 import ui.theme.AppTheme
 import java.io.File
@@ -71,9 +74,9 @@ fun App() {
 @Composable
 private fun MainView() {
     // create three views side by side, expand them equally to fill the screen
-    val viewModel = remember {
+    val viewModel = viewModel<MainViewModel> {
         MainViewModel(
-            initialFolder = File("/home/florian/Pictures/240511_Bodenfluh/")
+            initialFolder = File("/home/florian/Pictures/sample_images/")
         )
     }
     Column(
@@ -147,14 +150,19 @@ fun SearchBar(viewModel: MainViewModel) {
 @Composable
 fun ImagesView(viewModel: MainViewModel) {
     val files by viewModel.fileList.collectAsState()
+    val imageRequests by viewModel.imageRequests.collectAsState(emptyList())
     // create a grid of all images
     LazyVerticalGrid(
         columns = GridCells.Adaptive(minSize = 64.dp),
         verticalArrangement = Arrangement.spacedBy(8.dp),
         horizontalArrangement = Arrangement.spacedBy(8.dp),
     ) {
-        items(files) { file ->
-            Text(file.name)
+        items(imageRequests) { request ->
+            AsyncImage(
+                request = request,
+                contentDescription = null,
+                modifier = Modifier.size(64.dp),
+            )
         }
     }
 }
