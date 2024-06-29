@@ -23,6 +23,7 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
+import androidx.compose.material3.VerticalDivider
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -97,11 +98,15 @@ private fun MainView() {
             ) {
                 FilesView(viewModel)
             }
+            VerticalDivider(
+            )
             Column(
                 modifier = Modifier.weight(1f).padding(8.dp),
             ) {
                 ImagesView(viewModel)
             }
+            VerticalDivider(
+            )
             Column(
                 modifier = Modifier.weight(1f).padding(8.dp),
             ) {
@@ -151,23 +156,20 @@ fun SearchBar(viewModel: MainViewModel) {
 
 @Composable
 fun ImagesView(viewModel: MainViewModel) {
-    val files by viewModel.fileList.collectAsState()
-    val imageRequests by viewModel.imageRequests.collectAsState(emptyList())
+    val imageFiles by viewModel.imageFiles.collectAsState()
     // create a grid of all images
     LazyVerticalGrid(
         columns = GridCells.Adaptive(minSize = 128.dp),
         verticalArrangement = Arrangement.spacedBy(8.dp),
         horizontalArrangement = Arrangement.spacedBy(8.dp),
     ) {
-        items(imageRequests) { request ->
-            Box(modifier = Modifier
-                .aspectRatio(1f)
-                .clickable {
-                    println("Clicked on image: ${request.uri}")
-                }) {
+        items(imageFiles) { imageFile ->
+            Box(modifier = Modifier.aspectRatio(1f).clickable {
+                viewModel.selectFile(imageFile)
+            }) {
                 AsyncImage(
-                    request = request,
-                    contentDescription = null,
+                    request = imageFile.thumbnailRequest,
+                    contentDescription = imageFile.name,
                     modifier = Modifier.padding(8.dp).align(Alignment.Center)
                 )
             }
@@ -177,23 +179,50 @@ fun ImagesView(viewModel: MainViewModel) {
 
 @Composable
 fun MetadataView(viewModel: MainViewModel) {
-    val files by viewModel.fileList.collectAsState()
-    Text("Metadata View ${files.size}")
+    val selectedImageFile by viewModel.selectedFile.collectAsState()
+    selectedImageFile?.let {
+        val metadata = it.exifMetadataAsMap()
+        LazyColumn(
+            verticalArrangement = Arrangement.spacedBy(4.dp),
+        ) {
+            metadata.forEach { (directoryName, entries) ->
+                item {
+                    Text(
+                        text = directoryName,
+                    )
+                }
+                items(entries.toList()) { (key, value) ->
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(start = 16.dp)
+                    ) {
+                        Text(
+                            text = key,
+                            modifier = Modifier.weight(1f)
+                        )
+                        Text(
+                            text = value,
+                            modifier = Modifier.weight(1f)
+                        )
+                    }
+                }
+            }
+        }
+    }
 }
 
 @Composable
 private fun FilesView(viewModel: MainViewModel) {
-    val files by viewModel.fileList.collectAsState()
+    val imageFiles by viewModel.imageFiles.collectAsState()
     // load files initially into a variable
     LazyColumn {
-        items(files) { file ->
+        items(imageFiles) { imageFile ->
             Row(modifier = Modifier.fillMaxWidth().clickable {
-                println("Clicked on file: ${file.name}")
-
-                viewModel.loadMetadata(file)
+                viewModel.selectFile(imageFile)
             }) {
                 Text(
-                    file.name, modifier = Modifier.padding(8.dp)
+                    imageFile.name, modifier = Modifier.padding(8.dp)
                 )
             }
         }
