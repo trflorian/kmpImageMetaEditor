@@ -20,12 +20,20 @@ kotlin {
 
         desktopMain.dependencies {
             implementation(compose.material3)
+            implementation(compose.materialIconsExtended)
             implementation(compose.ui)
             implementation(compose.components.resources)
             implementation(compose.components.uiToolingPreview)
             implementation(compose.desktop.currentOs)
 
-            implementation("com.ashampoo:kim:0.18.4")
+            implementation(libs.koin.core)
+            implementation(libs.koin.compose)
+
+            implementation(libs.lifecycle.viewmodel.compose)
+
+            implementation(libs.navigation.compose)
+
+            implementation(libs.kim)
         }
     }
 }

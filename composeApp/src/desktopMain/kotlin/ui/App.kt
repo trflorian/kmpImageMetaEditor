@@ -1,24 +1,45 @@
 package ui
 
+import MainViewModel
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Clear
+import androidx.compose.material.icons.filled.Search
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.input.key.Key
+import androidx.compose.ui.input.key.KeyEventType
+import androidx.compose.ui.input.key.key
+import androidx.compose.ui.input.key.onKeyEvent
+import androidx.compose.ui.input.key.type
+import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.unit.dp
+import androidx.navigation.compose.NavHost
+import androidx.navigation.compose.composable
+import androidx.navigation.compose.rememberNavController
 import com.ashampoo.kim.Kim
 import com.ashampoo.kim.format.jpeg.JpegRewriter
 import com.ashampoo.kim.input.JvmInputStreamByteReader
 import com.ashampoo.kim.input.use
 import com.ashampoo.kim.jvm.readMetadata
-import com.ashampoo.kim.model.MetadataUpdate
 import com.ashampoo.kim.output.OutputStreamByteWriter
 import org.jetbrains.compose.ui.tooling.preview.Preview
 import ui.theme.AppTheme
@@ -37,33 +58,121 @@ fun App() {
         Surface(
             Modifier.fillMaxSize()
         ) {
-            FilesView()
+            val navController = rememberNavController()
+            NavHost(
+                navController = navController,
+                startDestination = "main",
+            ) {
+                composable("main") {
+                    MainView()
+                }
+            }
         }
     }
 }
 
 @Composable
-private fun FilesView() {
-    // load files initially into a variable
-    val files by
-        remember { mutableStateOf(loadFilesInFolder(File("/home/florian/Pictures/240511_Bodenfluh/"))) }
-    LazyColumn(
+private fun MainView() {
+    // create three views side by side, expand them equally to fill the screen
+    val viewModel = remember { MainViewModel() }
+    Column(
         modifier = Modifier.fillMaxSize(),
-        verticalArrangement = Arrangement.spacedBy(8.dp),
     ) {
-        items(files) { file ->
-            Text(file.name, modifier = Modifier.clickable(onClick = {
-                println("Clicked on file: ${file.name}")
-
-                // load metadata of that image file
-                loadMetadata(file)
-            }))
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+        ) {
+            SearchBar(viewModel)
+        }
+        Row(
+            horizontalArrangement = Arrangement.spacedBy(8.dp),
+        ) {
+            Column(
+                modifier = Modifier.weight(1f),
+            ) {
+                FilesView(viewModel)
+            }
+            Column(
+                modifier = Modifier.weight(1f),
+            ) {
+                ImagesView(viewModel)
+            }
+            Column(
+                modifier = Modifier.weight(1f),
+            ) {
+                MetadataView(viewModel)
+            }
         }
     }
 }
 
-private fun loadFilesInFolder(folder: File): List<File> {
-    return folder.listFiles()?.toList()?.sorted() ?: emptyList()
+@Composable
+fun SearchBar(viewModel: MainViewModel) {
+    var pathInput by remember { mutableStateOf("/home/florian/Pictures/240511_Bodenfluh/") }
+    val focusManager = LocalFocusManager.current
+    OutlinedTextField(value = pathInput,
+        onValueChange = { pathInput = it },
+        label = { Text("Path") },
+        singleLine = true,
+        leadingIcon = {
+            IconButton(onClick = {
+                viewModel.loadFiles(File(pathInput))
+                focusManager.clearFocus()
+            }) {
+                Icon(imageVector = Icons.Default.Search, contentDescription = "Search")
+            }
+        },
+        trailingIcon = {
+            IconButton(onClick = {
+                pathInput = ""
+            }) {
+                if (pathInput.isNotBlank()) {
+                    Icon(
+                        imageVector = Icons.Default.Clear,
+                        contentDescription = null,
+                    )
+                }
+            }
+        },
+        modifier = Modifier.fillMaxWidth().onKeyEvent { keyEvent ->
+            if (keyEvent.key != Key.Enter) return@onKeyEvent false
+            if (keyEvent.type == KeyEventType.KeyUp) {
+                viewModel.loadFiles(File(pathInput))
+                focusManager.clearFocus()
+            }
+            return@onKeyEvent true
+        })
+}
+
+@Composable
+fun ImagesView(viewModel: MainViewModel) {
+    val files by viewModel.fileList.collectAsState()
+    Text("Images View ${files.size}")
+}
+
+@Composable
+fun MetadataView(viewModel: MainViewModel) {
+    val files by viewModel.fileList.collectAsState()
+    Text("Metadata View ${files.size}")
+}
+
+@Composable
+private fun FilesView(viewModel: MainViewModel) {
+    val files by viewModel.fileList.collectAsState()
+    // load files initially into a variable
+    LazyColumn {
+        items(files) { file ->
+            Row(modifier = Modifier.fillMaxWidth().clickable {
+                    println("Clicked on file: ${file.name}")
+
+                    // load metadata of that image file
+                    loadMetadata(file)
+                }) {
+                Text(
+                    file.name, modifier = Modifier.padding(8.dp)
+                )
+            }
+        }
+    }
 }
 
 private fun loadMetadata(file: File) {
